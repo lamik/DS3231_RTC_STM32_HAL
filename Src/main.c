@@ -108,8 +108,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  DS3231_GetDateTime(&r);
-	  HAL_Delay(200);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -162,7 +161,13 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+	if(GPIO_Pin == DS3231_INT_Pin)
+	{
+		  DS3231_GetDateTime(&r);
+	}
+}
 /* USER CODE END 4 */
 
 /**
