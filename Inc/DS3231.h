@@ -1,12 +1,22 @@
 /*
  * DS3231.h
  *
- *  Created on: 28 sie 2019
+ *  Created on: 28.08.2019
  *      Author: Mateusz Salamon
+ *		 mateusz@msalamon.pl
+ *
+ *      Website: https://msalamon.pl/piekielnie-dokladny-rtc-ds3231-na-stm32/
+ *      GitHub:  https://github.com/lamik/DS3231_RTC_STM32_HAL
+ *      Contact: mateusz@msalamon.pl
  */
 
 #ifndef DS3231_H_
 #define DS3231_H_
+
+//
+//	Uncomment when you are using DMA reading
+//
+#define DS3231_USE_DMA
 
 #define DS3231_ADDRESS              (0x68<<1)
 #define DS3231_I2C_TIMEOUT			100
@@ -82,6 +92,10 @@ void DS3231_TurnOnOscillator(uint8_t OnOff, uint8_t OnOffBattery, SQW_Rate Frequ
 void DS3231_Init(I2C_HandleTypeDef *hi2c);
 
 void DS3231_SetDateTime(RTCDateTime *DateTime);
-void DS3231_GetDateTime(RTCDateTime *DateTime);
-
+#ifdef DS3231_USE_DMA
+void DS3231_ReceiveDateTimeDMA(void);	// Use in DS3231 Interrupt handler
+void DS3231_CalculateDateTime(RTCDateTime *DateTime);	// Use in DMA Complete Receive interrupt
+#else
+void DS3231_GetDateTime(RTCDateTime *DateTime);	// Use in blocking/interrupt mode in DS3231_INT EXTI handler
+#endif
 #endif /* DS3231_H_ */

@@ -67,6 +67,8 @@ void Error_Handler(void);
 #define USART_RX_GPIO_Port GPIOA
 #define LED_Pin GPIO_PIN_5
 #define LED_GPIO_Port GPIOA
+#define TEST_Pin GPIO_PIN_8
+#define TEST_GPIO_Port GPIOA
 #define DS3231_INT_Pin GPIO_PIN_9
 #define DS3231_INT_GPIO_Port GPIOA
 #define DS3231_INT_EXTI_IRQn EXTI9_5_IRQn

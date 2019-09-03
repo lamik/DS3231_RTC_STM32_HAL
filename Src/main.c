@@ -15,11 +15,20 @@
   *                        opensource.org/licenses/BSD-3-Clause
   *
   ******************************************************************************
+  *
+  *  Created on: 28.08.2019
+  *      Author: Mateusz Salamon
+  *		 mateusz@msalamon.pl
+  *
+  *      Website: https://msalamon.pl/piekielnie-dokladny-rtc-ds3231-na-stm32/
+  *      GitHub:  https://github.com/lamik/DS3231_RTC_STM32_HAL
+  *      Contact: mateusz@msalamon.pl
   */
 /* USER CODE END Header */
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "dma.h"
 #include "i2c.h"
 #include "usart.h"
 #include "gpio.h"
@@ -27,6 +36,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "DS3231.h"
+#include "stdio.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -47,7 +57,9 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-RTCDateTime r;
+RTCDateTime r;		// Date and Time variable
+uint8_t Message[32]; // UART message
+uint8_t MessageSize;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,25 +102,25 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
   DS3231_Init(&hi2c1);
 
-  r.Day = 30;
-  r.Month = 8;
-  r.Year = 2019;
-  r.Hour = 21;
-  r.Minute = 57;
-  r.Second = 20;
-  DS3231_SetDateTime(&r);
+  uint32_t TimerUART = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-
+	  if((HAL_GetTick() - TimerUART) > 1000)
+	  {
+		  MessageSize = sprintf(Message, "%02d:%02d:%02d\n\r", r.Hour, r.Minute, r.Second);
+		  HAL_UART_Transmit(&huart2, Message, MessageSize, 1000);
+		  TimerUART = HAL_GetTick();
+	  }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -165,8 +177,13 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	if(GPIO_Pin == DS3231_INT_Pin)
 	{
-		  DS3231_GetDateTime(&r);
+		DS3231_ReceiveDateTimeDMA();
 	}
+}
+
+void HAL_I2C_MemRxCpltCallback(I2C_HandleTypeDef *hi2c)
+{
+	DS3231_CalculateDateTime(&r);
 }
 /* USER CODE END 4 */
 

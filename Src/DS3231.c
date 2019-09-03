@@ -1,14 +1,20 @@
 /*
  * DS3231.c
  *
- *  Created on: 28 sie 2019
+ *  Created on: 28.08.2019
  *      Author: Mateusz Salamon
+ *		 mateusz@msalamon.pl
+ *
+ *      Website: https://msalamon.pl/piekielnie-dokladny-rtc-ds3231-na-stm32/
+ *      GitHub:  https://github.com/lamik/DS3231_RTC_STM32_HAL
+ *      Contact: mateusz@msalamon.pl
  */
 
 #include "main.h"
 #include "DS3231.h"
 
 I2C_HandleTypeDef *hi2c_ds3231;
+volatile uint8_t Ds3231Buffer[7];
 
 void DS3231_SetControlRegister(uint8_t Value)
 {
@@ -141,20 +147,30 @@ int dayofweek(int Day, int Month, int Year)
     return (7 + N) % 7;
 }
 
+void DS3231_CalculateDateTime(RTCDateTime *DateTime)
+{
+	DateTime->Second = bcd2dec(Ds3231Buffer[0]);
+	DateTime->Minute = bcd2dec(Ds3231Buffer[1]);
+	DateTime->Hour = bcd2dec(Ds3231Buffer[2] & 0x3F);
+	DateTime->DayOfWeek = Ds3231Buffer[3];
+	DateTime->Day = bcd2dec(Ds3231Buffer[4]);
+	DateTime->Month = bcd2dec(Ds3231Buffer[5] & 0x1F);
+	DateTime->Year = 2000 + bcd2dec(Ds3231Buffer[6]);
+}
+
+#ifdef DS3231_USE_DMA
+void DS3231_ReceiveDateTimeDMA(void)
+{
+	HAL_I2C_Mem_Read_DMA(hi2c_ds3231, DS3231_ADDRESS, DS3231_REG_TIME, 1, Ds3231Buffer, 7);
+}
+#else
 void DS3231_GetDateTime(RTCDateTime *DateTime)
 {
-	uint8_t tmp[7];
+	HAL_I2C_Mem_Read(hi2c_ds3231, DS3231_ADDRESS, DS3231_REG_TIME, 1, Ds3231Buffer, 7, DS3231_I2C_TIMEOUT);
 
-	HAL_I2C_Mem_Read(hi2c_ds3231, DS3231_ADDRESS, DS3231_REG_TIME, 1, tmp, 7, DS3231_I2C_TIMEOUT);
-
-	DateTime->Second = bcd2dec(tmp[0]);
-	DateTime->Minute = bcd2dec(tmp[1]);
-	DateTime->Hour = bcd2dec(tmp[2] & 0x3F);
-	DateTime->DayOfWeek = tmp[3];
-	DateTime->Day = bcd2dec(tmp[4]);
-	DateTime->Month = bcd2dec(tmp[5] & 0x1F);
-	DateTime->Year = 2000 + bcd2dec(tmp[6]);
+	void DS3231_CalculateDateTime(DateTime);
 }
+#endif
 
 void DS3231_SetDateTime(RTCDateTime *DateTime)
 {
