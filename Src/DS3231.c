@@ -1,6 +1,7 @@
 /*
  * DS3231.c
  *
+ *	The MIT License.
  *  Created on: 28.08.2019
  *      Author: Mateusz Salamon
  *		 mateusz@msalamon.pl
