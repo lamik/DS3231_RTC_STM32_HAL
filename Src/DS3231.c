@@ -169,7 +169,7 @@ void DS3231_GetDateTime(RTCDateTime *DateTime)
 {
 	HAL_I2C_Mem_Read(hi2c_ds3231, DS3231_ADDRESS, DS3231_REG_TIME, 1, Ds3231Buffer, 7, DS3231_I2C_TIMEOUT);
 
-	void DS3231_CalculateDateTime(DateTime);
+	DS3231_CalculateDateTime(DateTime);
 }
 #endif
 
